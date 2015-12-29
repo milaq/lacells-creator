@@ -18,6 +18,16 @@ splitcsv() {
   for i in $1_*; do mv "$i" "$i.csv"; done
 }
 
+addfilescsv() {
+  # Add a rightmost files column to the countries csv
+  cd "$1"
+  awk -v PREFIX="$3" -F , \
+    '{ gsub(/\s*$/, ""); if($1!="mcc") { printf("%s,", $0); system("echo `ls " PREFIX $1"*.csv`"); } else { print $0 ",urls"; }}' \
+    <"$2" >"$2.new" &&
+      mv "$2.new" "$2"
+  cd - >/dev/null
+}
+
 checkgit() {
   # Make sure we have an up-to-date git repository
   if [ ! -d "$LACELLS_GIT_DIR/.git" ]; then
@@ -31,8 +41,7 @@ checkgit() {
   fi
 }
 
-# Push update to repository
-upload() {
+prepare() {
   # Update data files
   rm -f "$LACELLS_GIT_DIR/lacells-*"
   cp "$LACELLS_DIR"/lacells-* "$LACELLS_GIT_DIR/"
@@ -41,7 +50,12 @@ upload() {
   splitcsv "$LACELLS_GIT_DIR/lacells-mcc_310"
   splitcsv "$LACELLS_GIT_DIR/lacells-mcc_262"
 
-  # Commit and push changes
+  # Add filenames to lacells-countries.csv
+  addfilescsv "$LACELLS_GIT_DIR" "lacells-countries.csv" "lacells-mcc_"
+}
+
+# Commit and push changes
+upload() {
   dogit add -A && \
   dogit commit -m lacells-update && \
   dogit push -q 2>&1 | grep -v 'remote: warning: \(GH001\|See\|.*this is larger than\)' 1>&2
@@ -55,6 +69,7 @@ if [ `basename $0` = upload-git ]; then
   source "$PREFIX/lib/util"
   config_default "$PREFIX"
   config_from_options $@
+  prepare
   upload
 fi
 
