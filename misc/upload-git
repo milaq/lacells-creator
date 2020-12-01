@@ -34,11 +34,6 @@ checkgit() {
     echo "Please initialize a git repository in $LACELLS_GIT_DIR with a default remote" 1>&2
     exit 1
   fi
-  dogit pull
-  if [ $? -ne 0 ]; then
-    echo "Please make sure git pull works, or pushing won't work" 1>&2
-    exit 2
-  fi
 }
 
 prepare() {
@@ -52,13 +47,23 @@ prepare() {
 
   # Add filenames to lacells-countries.csv
   addfilescsv "$LACELLS_GIT_DIR" "lacells-countries.csv" "lacells-mcc_"
+
+  # Add website files
+  cp "$PREFIX"/misc/html/* "$LACELLS_GIT_DIR/"
 }
 
 # Commit and push changes
 upload() {
   dogit add -A && \
   dogit commit -m lacells-update && \
-  dogit push -q 2>&1 | grep -v 'remote: warning: \(GH001\|See\|.*this is larger than\)' 1>&2
+  dogit push -f -q 2>&1 | grep -v 'remote: warning: \(GH001\|See\|.*this is larger than\)' 1>&2
+}
+
+# Remove lines <2 points, because we need to stay <2GB
+reduce() {
+  for i in $LACELLS_GIT_DIR/*.csv; do
+    cat "$i" | grep -v ',1$' >"$i.new" && mv "$i.new" "$i"
+  done
 }
 
 # Main program
@@ -70,6 +75,7 @@ if [ `basename $0` = upload-git ]; then
   config_default "$PREFIX"
   config_from_options $@
   prepare
+  #reduce
   upload
 fi
 
