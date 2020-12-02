@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Update remote git(hub) repository with lacells-creator results
 #
@@ -8,7 +9,9 @@
 # (c)2015 wvengen & n76
 
 dogit() {
-  (cd "$LACELLS_GIT_DIR" && git $@)
+  pushd "$LACELLS_GIT_DIR"
+  git $@
+  popd
 }
 
 splitcsv() {
@@ -56,7 +59,7 @@ prepare() {
 upload() {
   dogit add -A && \
   dogit commit -m lacells-update && \
-  dogit push -f -q 2>&1 | grep -v 'remote: warning: \(GH001\|See\|.*this is larger than\)' 1>&2
+  dogit push -f -q $GIT_PUSH_ARGS 2>&1 | grep -v 'remote: warning: \(GH001\|See\|.*this is larger than\)' 1>&2
 }
 
 # Remove lines <2 points, because we need to stay <2GB
@@ -68,7 +71,7 @@ reduce() {
 
 # Main program
 if [ `basename $0` = upload-git ]; then
-  # expects to be run from misc/upload-git
+  # expects to be run as misc/upload-git
   PREFIX="`dirname $0`/.."
   source "$PREFIX/lib/config"
   source "$PREFIX/lib/util"
@@ -78,5 +81,3 @@ if [ `basename $0` = upload-git ]; then
   #reduce
   upload
 fi
-
-exit 0

@@ -25,11 +25,10 @@ jobs:
           git config user.email lacells
           git config user.name lacells
           git remote add origin git@github.com:wvengen/lacells.git
-          git branch --set-upstream-to origin
       - name: Publish website
         env:
           LACELLS_GIT_SSH_KEY: ${{ secrets.LACELLS_GIT_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh && chmod 0700 ~/.ssh
-          echo "$LACELLS_GIT_SSH_KEY" >~/.ssh/id_rsa
-          ./misc/upload-git
+          echo "$LACELLS_GIT_SSH_KEY" >~/.ssh/id_rsa && chmod 0600 ~/.ssh/id_rsa
+          GIT_PUSH_ARGS="--set-upstream origin master" ./misc/upload-git
