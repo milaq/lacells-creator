@@ -45,8 +45,15 @@ prepare() {
   cp "$LACELLS_DIR"/lacells-* "$LACELLS_GIT_DIR/"
 
   # Github doesn't like big files, split them.
-  splitcsv "$LACELLS_GIT_DIR/lacells-mcc_310"
+  # TODO use find-command instead of harded list here
+  splitcsv "$LACELLS_GIT_DIR/lacells-mcc_208"
+  splitcsv "$LACELLS_GIT_DIR/lacells-mcc_234"
+  splitcsv "$LACELLS_GIT_DIR/lacells-mcc_250"
   splitcsv "$LACELLS_GIT_DIR/lacells-mcc_262"
+  splitcsv "$LACELLS_GIT_DIR/lacells-mcc_310"
+  splitcsv "$LACELLS_GIT_DIR/lacells-mcc_404"
+  splitcsv "$LACELLS_GIT_DIR/lacells-mcc_440"
+  splitcsv "$LACELLS_GIT_DIR/lacells-mcc_724"
 
   # Add filenames to lacells-countries.csv
   addfilescsv "$LACELLS_GIT_DIR" "lacells-countries.csv" "lacells-mcc_"
@@ -62,7 +69,7 @@ upload() {
   dogit push -f -q $GIT_PUSH_ARGS 2>&1 | grep -v 'remote: warning: \(GH001\|See\|.*this is larger than\)' 1>&2
 }
 
-# Remove lines <2 points, because we need to stay <2GB
+# Remove lines <2 points, because we need to stay <1GB
 reduce() {
   for i in $LACELLS_GIT_DIR/*.csv; do
     cat "$i" | grep -v ',1$' >"$i.new" && mv "$i.new" "$i"
