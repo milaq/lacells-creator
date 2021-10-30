@@ -23,6 +23,8 @@ gensql_msg() {
 # Usage: gensql_import <source1> [<source2> [...]]
 gensql_import() {
 	cat <<-EOS
+		PRAGMA synchronous = OFF;
+		PRAGMA journal_mode = OFF;
 		CREATE TABLE cells (
 			mcc INTEGER,
 			mnc INTEGER,
@@ -88,6 +90,8 @@ gensql_filter() {
 # Usage: gensql_combine
 gensql_combine() {
 	cat <<-EOS
+		PRAGMA synchronous = OFF;
+		PRAGMA journal_mode = OFF;
 		`gensql_msg "Merging cell towers"`
 		CREATE TEMP TABLE cells_merged (
 			mcc INTEGER,
