@@ -178,6 +178,28 @@ gensql_export_mccs() {
 	done
 }
 
+gen_mccurl_info() {
+	# Add filenames to lacells-countries.csv
+	pushd $1
+	awk -v PREFIX="lacells-mcc_" -F , \
+		'{ gsub(/\s*$/, ""); if($1!="mcc") { printf("%s,", $0); system("echo `ls " PREFIX $1"*.csv`"); } else { print $0 ",urls"; }}' \
+		< "$2" > "$2.new"
+	if [[ $? -eq 0 ]]; then
+		mv "$2.new" "$2"
+	fi
+	popd
+}
+
+gen_webinfo() {
+	timestamp=$(date -u "+%Y/%m/%d %H:%M UTC")
+	if [[ -n $MCC ]]; then
+		mcc_list="$MCC"
+	else
+		mcc_list="ALL"
+	fi
+	printf "TIMESTAMP: $timestamp\nSOURCES: MOZ OCID\nCOUNTRIES: $mcc_list\nGENERATED-BY: $GENERATEDBY\n" > $1
+}
+
 # Remove lacells database (and keep backup)
 process_clean() {
 	if [ -e "$LACELLS_DB" ]; then
@@ -211,6 +233,10 @@ process() {
 	if [[ $1 =~ export ]]; then
 		msg "Generating countries geojson in $LACELLS_DIR/lacells-countries-geojson"
 		"$PREFIX/misc/countries2geojson" <"$LACELLS_DIR/lacells-countries.csv" >"$LACELLS_DIR/lacells-countries.geojson"
+		msg "Generating urls to mcc files $LACELLS_DIR/lacells-countries.csv"
+		gen_mccurl_info "$LACELLS_DIR" "$LACELLS_DIR/lacells-countries.csv"
+		msg "Generating web info file $LACELLS_DIR/lacells-info.txt"
+		gen_webinfo "$LACELLS_DIR/lacells-info.txt"
 	fi
 }
 
